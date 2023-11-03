@@ -80,8 +80,6 @@ class RoomCreate(BaseModel):
     user_id: int
     room_name: str
     room_size: int
-    room_id: int
-    room_type: str
 
 # -------------- login Signup --------------
 
@@ -135,7 +133,7 @@ def create_room(room_data: RoomCreate):
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO chat_rooms (room_name, room_size, admin_user_id) VALUES (?, ?, ?)",
-        (room_data.room_name, room_data.room_size, room_data.user_id, room_data.room_id, room_data.room_type),
+        (room_data.room_name, room_data.room_size, room_data.user_id),
     )
     conn.commit()
     cursor.close()
