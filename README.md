@@ -1,4 +1,8 @@
 ﻿# hackout_backend
+
+install dependencies:
+pip install fastapi[all] sqlalchemy databases[mysql]
+
 To run server:
 uvicorn main:app --reload <ip_address> --port <port_number>
 
