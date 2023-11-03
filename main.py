@@ -8,6 +8,9 @@ from sqlalchemy.ext.declarative import declarative_base
 
 app = FastAPI()
 
+@app.get("/")
+async def root():
+    return {"message": "Hackon"}
 
 # -------------- For MySQL --------------
 
@@ -35,7 +38,6 @@ conn.execute('''
     )
 ''')
 
-
 conn.execute('''
     CREATE TABLE IF NOT EXISTS form_data (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,7 +57,7 @@ conn.execute('''
     )
 ''')
 
-# -------------- Classes --------------
+# -------------- Models --------------
 
 class UserCreate(BaseModel):
     username: str
