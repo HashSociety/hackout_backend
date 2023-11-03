@@ -22,3 +22,12 @@ class RoomCreate(BaseModel):
     Latitude: float
     Longitude: float
     DistanceAllowed: float
+    
+class RoomResponseModel(BaseModel):
+    RoomID: str
+    UserID: int
+    OwnerName: str
+    RoomPurpose: str
+    Latitude: float
+    Longitude: float
+    DistanceAllowed: float
