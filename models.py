@@ -3,6 +3,10 @@ from pydantic import BaseModel
 class SignupRequest(BaseModel):
     email: str
     password: str
+    name:str
+    last_name :str
+    gender : str
+    age : str
 
 class LoginRequest(BaseModel):
     email: str

@@ -1,0 +1,13 @@
+conn = await get_connection()
+
+    # Insert the new record into the submissions table
+    query = """
+        INSERT INTO submissions (SUB_ID, USER_ID, PCAP_LINK, CSV_LINK, REPORT_LINK)
+        VALUES (%s, %s, %s, %s, %s)
+    """
+
+    async with conn.cursor() as cursor:
+        await cursor.execute(query, (submission_id, userid, destination_file_pcap, destination_file_csv, report_link))
+        await conn.commit()
+
+    await release_connection(conn)

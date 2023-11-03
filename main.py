@@ -5,7 +5,8 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 import pyrebase
 from  models import * 
-
+import aiomysql
+from aiomysql import Pool
 app = FastAPI()
 
 app.add_middleware(
@@ -31,6 +32,45 @@ async def index(request: Request):
 #   appId: "1:1079333558091:web:6670b36cb755b756b4bace",
 #   measurementId: "G-Z13R905TEE"
 # };
+
+
+
+
+
+
+
+async def create_connection_pool():
+    pool = await aiomysql.create_pool(
+        host='sql.freedb.tech',
+        user='freedb_hashsociety',
+        password='PjbkVhfvM6U*rcp',
+        db='freedb_hashsociety',
+        autocommit=True
+    )
+    return pool
+
+async def get_connection():
+    return await app.state.pool.acquire()
+
+async def release_connection(conn):
+    await app.state.pool.release(conn)
+
+
+@app.on_event("startup")
+async def startup_event():
+    app.state.pool = await create_connection_pool()
+    
+    
+@app.on_event("shutdown")
+async def shutdown_event():
+    await app.state.pool.close()
+
+
+
+
+
+
+
 config = {
     "apiKey":"AIzaSyBtQKU950eUqsgAVtQw5aubRKXcmyc5g2E",
     "authDomain":"hashtogether.firebaseapp.com",
@@ -46,11 +86,26 @@ firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
 
 @app.post("/signup")
-def signup(request: SignupRequest):
+async def signup(request: SignupRequest):
     try:
+        # Create a user with email and password (this part remains the same)
         user = auth.create_user_with_email_and_password(request.email, request.password)
+        
+        # Insert the user's information into the MySQL table
+        async with await get_connection() as conn:
+            async with conn.cursor() as cursor:
+                # Define the SQL INSERT statement
+                sql = "INSERT INTO User (EmailId, Name, LastName, Gender, Age) VALUES (%s, %s, %s, %s, %s)"
+                
+                # Specify the values to insert (you can adjust this part as needed)
+                values = (request.email, request.name, request.last_name, request.gender, request.age)
+                
+                # Execute the INSERT statement
+                await cursor.execute(sql, values)
+            
         return {"message": "Signup successful", "user": f"{user['email']}"}
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=400, detail="Signup failed")
 
 def authenticate_user(username: str, password: str):
@@ -78,3 +133,5 @@ async def get_userid(token : str= Depends(oauth2_scheme)):
     #print(info['users'][0]['email'])
     email=info['users'][0]['email']
     return {"userid": email} 
+
+
