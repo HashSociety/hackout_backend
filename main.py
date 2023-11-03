@@ -127,11 +127,36 @@ def authenticate_user(username: str, password: str):
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return authenticate_user(form_data.username, form_data.password)
 
-@app.get("/get_userid",tags=['Auth'])
-async def get_userid(token : str= Depends(oauth2_scheme)):
-    info=auth.get_account_info(token)
-    #print(info['users'][0]['email'])
-    email=info['users'][0]['email']
-    return {"userid": email} 
+@app.get("/get_user_info", tags=['Auth'])
+async def get_user_info(token: str = Depends(oauth2_scheme)):
+    info = auth.get_account_info(token)
+    email = info['users'][0]['email']
+
+    # Use the email to fetch user information from the User table
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            # Define the SQL query to retrieve user information based on the email
+            sql = "SELECT * FROM User WHERE EmailId = %s"
+            
+            # Execute the SQL query with the email as a parameter
+            await cursor.execute(sql, (email,))
+            
+            # Fetch the result
+            user_info = await cursor.fetchone()
+
+    # Check if user information was found
+    if user_info:
+        # Convert the result to a dictionary for response
+        user_info_dict = {
+            "Userid": user_info[0],
+            "EmailId": user_info[1],
+            "Name": user_info[2],
+            "LastName": user_info[3],
+            "Gender": user_info[4],
+            "Age": user_info[5]
+        }
+        return user_info_dict
+    else:
+        raise HTTPException(status_code=404, detail="User not found")
 
 
