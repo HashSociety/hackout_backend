@@ -113,7 +113,7 @@ async def user_login(user_login: UserLogin):
     
 # -------------- Form Data --------------
 
-@app.post("/enter_form_details/")
+@app.post("/form_details/")
 async def enter_form_details_and_create_room(form_data: FormData, user_id: int):
     cursor = conn.cursor()
     cursor.execute(
