@@ -15,3 +15,10 @@ class LoginRequest(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class RoomCreate(BaseModel):
+    OwnerName: str
+    RoomPurpose: str
+    Latitude: float
+    Longitude: float
+    DistanceAllowed: float

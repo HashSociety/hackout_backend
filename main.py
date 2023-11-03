@@ -7,6 +7,7 @@ import pyrebase
 from  models import * 
 import aiomysql
 from aiomysql import Pool
+import uuid 
 app = FastAPI()
 
 app.add_middleware(
@@ -160,3 +161,50 @@ async def get_user_info(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=404, detail="User not found")
 
 
+@app.post("/create_room",tags=['Rooms'])
+async def create_room(room_data: RoomCreate, token: str = Depends(oauth2_scheme)):
+    info = auth.get_account_info(token)
+    email = info['users'][0]['email']
+
+    # Use the email to fetch the User's UserID from the User table
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT UserID FROM User WHERE EmailId = %s"
+            await cursor.execute(sql, (email,))
+            user_info = await cursor.fetchone()
+
+    if not user_info:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Generate a new UUID for RoomID
+    # room_id = str(uuid.uuid4())
+
+    # # Insert the data into the Room table
+    # query = """
+    #     INSERT INTO Room (RoomID, UserID, OwnerName, RoomPurpose, Latitude, Longitude, DistanceAllowed)
+    #     VALUES (%s, %s, %s, %s, %s, %s, %s)
+    # """
+    # values = (room_id, user_info[0], room_data.OwnerName, room_data.RoomPurpose,
+    #           room_data.Latitude, room_data.Longitude, room_data.DistanceAllowed)
+
+    try:
+        room_id = str(uuid.uuid4())
+
+    # Insert the data into the Room table
+        query = """
+            INSERT INTO Room (RoomID, UserID, OwnerName, RoomPurpose, Latitude, Longitude, DistanceAllowed)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        values = (room_id, user_info[0], room_data.OwnerName, room_data.RoomPurpose,
+                room_data.Latitude, room_data.Longitude, room_data.DistanceAllowed)
+        async with await get_connection() as conn:
+            async with conn.cursor() as cursor:
+                print(0)
+                await cursor.execute(query, values)
+                print(1)
+            conn.commit()
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="Error inserting data into the database")
+
+    return {"message": "Room created successfully", "RoomID": room_id}
