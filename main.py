@@ -81,6 +81,7 @@ class RoomCreate(BaseModel):
     room_name: str
     room_size: int
     room_id: int
+    room_type: str
 
 # -------------- login Signup --------------
 
