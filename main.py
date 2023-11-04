@@ -333,3 +333,46 @@ def haversine(lat1, lon1, lat2, lon2):
     distance = R * c
 
     return distance
+
+@app.post("/join_room/{room_id}", tags=['Rooms'])
+async def join_room(room_id: str, token: str = Depends(oauth2_scheme)):
+    info = auth.get_account_info(token)
+    email = info['users'][0]['email']
+
+    # Use the email to fetch the User's UserID from the User table
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT UserID FROM User WHERE EmailId = %s"
+            await cursor.execute(sql, (email,))
+            user_info = await cursor.fetchone()
+
+    if not user_info:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Check if the room exists
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT * FROM Room WHERE RoomID = %s"
+            await cursor.execute(sql, (room_id,))
+            room_data = await cursor.fetchone()
+
+    if not room_data:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    # Check if the user is already a member of the room
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT * FROM RoomParticipants WHERE Room_ID = %s AND ParticipantID = %s"
+            await cursor.execute(sql, (room_id, user_info[0]))
+            existing_member = await cursor.fetchone()
+
+    if existing_member:
+        raise HTTPException(status_code=400, detail="User is already a member of the room")
+
+    # Add the user as a member to the room with is_admin set to 0
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "INSERT INTO RoomParticipants (Room_ID, ParticipantID, IsAdmin) VALUES (%s, %s, 0)"
+            await cursor.execute(sql, (room_id, user_info[0]))
+
+    return {"message": "User joined the room successfully"}
