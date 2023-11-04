@@ -66,3 +66,8 @@ class RoomPurposeModel(BaseModel):
     Room_ID: str
     Purpose_Description_Heading: str
     Purpose_Description_Value: str
+
+
+class PostChatModel(BaseModel):
+    RoomID: str
+    Chat: str

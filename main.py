@@ -61,6 +61,16 @@ async def create_connection_pool():
     )
     return pool
 
+# async def create_connection_pool():
+#     pool = await aiomysql.create_pool(
+#         host='127.0.0.1',
+#         user='root',
+#         password='4844',
+#         db='headout',
+#         autocommit=True
+#     )
+#     return pool
+
 async def get_connection():
     return await app.state.pool.acquire()
 
@@ -524,3 +534,51 @@ async def get_joined_rooms(token: str = Depends(oauth2_scheme)):
                     })
                 )
     return joined_rooms
+
+
+
+
+
+
+# Endpoint to post a chat message to a room
+@app.post("/post_chat", tags=['Chats'])
+async def post_chat(chat_data: PostChatModel, token: str = Depends(oauth2_scheme)):
+    info = auth.get_account_info(token)
+    email = info['users'][0]['email']
+
+    # Use the email to fetch the User's UserID from the User table
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT UserID FROM User WHERE EmailId = %s"
+            await cursor.execute(sql, (email,))
+            user_info = await cursor.fetchone()
+
+    if not user_info:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user_id = user_info[0]
+
+    # Check if the user is a participant in the specified room
+    room_id = chat_data.RoomID
+    if not is_user_joined_room(user_id, room_id):
+        raise HTTPException(status_code=404, detail="User is not a participant in this room")
+
+    # Insert the chat message into the Chats table
+    await insert_chat(room_id, user_id, chat_data.Chat)
+    
+    return {"message": "Chat message posted successfully"}
+
+# Function to check if the user is a participant in the room
+async def is_user_joined_room(user_id, room_id):
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT Room_ID FROM RoomParticipants WHERE ParticipantID = %s AND Room_ID = %s"
+            await cursor.execute(sql, (user_id, room_id))
+            return cursor.fetchone() is not None
+
+# Function to insert a chat message into the Chats table
+async def insert_chat(room_id, user_id, chat):
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "INSERT INTO Chats (RoomID, UserID, Chat) VALUES (%s, %s, %s)"
+            await cursor.execute(sql, (room_id, user_id, chat))
