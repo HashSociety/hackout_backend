@@ -472,3 +472,49 @@ async def get_room_members(room_id: str, token: str = Depends(oauth2_scheme)):
     ]
 
     return room_members_data
+
+    
+@app.get("/joined_rooms/", tags=['Rooms'], response_model=List[RoomResponseModel_three])
+async def get_joined_rooms(token: str = Depends(oauth2_scheme)):
+    info = auth.get_account_info(token)
+    email = info['users'][0]['email']
+
+    # Use the email to fetch the User's UserID from the User table
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT UserID FROM User WHERE EmailId = %s"
+            await cursor.execute(sql, (email,))
+            user_info = await cursor.fetchone()
+
+    if not user_info:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user_id = user_info[0]
+
+    # Use the UserID to fetch the rooms the user is joined in from the RoomMember table
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT Room_ID FROM RoomParticipants WHERE ParticipantID = %s"
+            await cursor.execute(sql, (user_id,))
+            room_ids = await cursor.fetchall()
+
+    if not room_ids:
+        raise HTTPException(status_code=404, detail="User is not joined in any room")
+
+    # Use the RoomIDs to fetch the room details from the Room table
+    joined_rooms = []
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            for room_id in room_ids:
+                sql = "SELECT * FROM Room WHERE RoomID = %s"
+                await cursor.execute(sql, (room_id,))
+                room_data = await cursor.fetchone()
+                joined_rooms.append(
+                    RoomResponseModel_three(**{
+                        "RoomID": room_data[0],
+                        "UserID": room_data[1],
+                        "OwnerName": room_data[2],
+                        "RoomPurpose": room_data[3],
+                })
+            )
+    return joined_rooms

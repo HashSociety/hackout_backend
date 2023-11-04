@@ -48,6 +48,11 @@ class RoomResponseModel_two(BaseModel):
     DistanceAllowed: float
     DistanceFromUser: float
     
+class RoomResponseModel_three(BaseModel):
+    RoomID: str
+    UserID: int
+    OwnerName: str
+    RoomPurpose: str
 
 class UserResponseModel(BaseModel):
     UserID: int
