@@ -1,5 +1,8 @@
 from pydantic import BaseModel
 from typing import List
+from datetime import datetime
+
+
 class SignupRequest(BaseModel):
     email: str
     password: str
@@ -71,3 +74,8 @@ class RoomPurposeModel(BaseModel):
 class PostChatModel(BaseModel):
     RoomID: str
     Chat: str
+
+class ChatData(BaseModel):
+    Username: str
+    Message: str
+    Timestamp: datetime

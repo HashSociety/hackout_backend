@@ -582,3 +582,48 @@ async def insert_chat(room_id, user_id, chat):
         async with conn.cursor() as cursor:
             sql = "INSERT INTO Chats (RoomID, UserID, Chat) VALUES (%s, %s, %s)"
             await cursor.execute(sql, (room_id, user_id, chat))
+
+
+
+
+
+# Endpoint to get chats for a specific room ordered by timestamp
+@app.get("/get_chats/{room_id}", tags=['Chats'], response_model=List[ChatData])
+async def get_chats(room_id: str, token: str = Depends(oauth2_scheme)):
+    info = auth.get_account_info(token)
+    email = info['users'][0]['email']
+
+    # Use the email to fetch the User's UserID from the User table
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT UserID FROM User WHERE EmailId = %s"
+            await cursor.execute(sql, (email,))
+            user_info = await cursor.fetchone()
+
+    if not user_info:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user_id = user_info[0]
+
+    # Check if the user is a participant in the specified room
+    if not await is_user_joined_room(user_id, room_id):
+        raise HTTPException(status_code=404, detail="User is not a participant in this room")
+
+    # Fetch chat messages for the specified room ordered by timestamp
+    chat_data = await get_chat_data(room_id)
+
+    return chat_data
+
+# Function to fetch chat data for a specific room ordered by timestamp
+async def get_chat_data(room_id):
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT User.Name, Chats.Chat, Chats.TimeStamp FROM Chats " \
+                  "INNER JOIN User ON Chats.UserID = User.UserID " \
+                  "WHERE Chats.RoomID = %s " \
+                  "ORDER BY Chats.TimeStamp DESC"
+            await cursor.execute(sql, (room_id,))
+            chat_data = await cursor.fetchall()
+    
+    # Convert the chat data to the ChatData model
+    return [ChatData(Username=row[0], Message=row[1], Timestamp=row[2]) for row in chat_data]
