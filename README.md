@@ -93,12 +93,3 @@ config = {
 - pyrebase: A Python wrapper for the Firebase API.
 - aiomysql: An asynchronous MySQL client for Python.
 
-## Notes
-
-- This is a sample application and should be customized and secured for production use.
-- Error handling and validation have not been thoroughly implemented in this example and should be enhanced for production use.
-
-Enjoy exploring and extending this FastAPI application for your specific needs!
-```
-
-You can copy and paste this Markdown content into your README.md file.
