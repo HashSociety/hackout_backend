@@ -53,6 +53,7 @@ class RoomResponseModel_three(BaseModel):
     UserID: int
     OwnerName: str
     RoomPurpose: str
+    IsAdmin: bool
 
 class UserResponseModel(BaseModel):
     UserID: int
