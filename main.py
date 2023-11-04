@@ -9,6 +9,9 @@ from  models import *
 import aiomysql
 from aiomysql import Pool
 import uuid 
+import math
+from typing import List
+
 app = FastAPI()
 
 
@@ -239,3 +242,80 @@ async def get_room(room_id: str, token: str = Depends(oauth2_scheme)):
         "Longitude": room_data[5],
         "DistanceAllowed": room_data[6]
     })
+
+
+
+
+
+
+
+@app.get("/search_nearby_rooms", tags=['Rooms'], response_model=List[RoomResponseModel])
+async def search_nearby_rooms(user_latitude: float, user_longitude: float, token: str = Depends(oauth2_scheme)):
+    info = auth.get_account_info(token)
+    email = info['users'][0]['email']
+
+    # Use the email to fetch the User's UserID from the User table
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT UserID FROM User WHERE EmailId = %s"
+            await cursor.execute(sql, (email,))
+            user_info = await cursor.fetchone()
+
+    if not user_info:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # async with await get_connection() as conn:
+    #     async with conn.cursor() as cursor:
+    #         sql = "SELECT * FROM Room WHERE RoomID = %s"
+    #         await cursor.execute(sql, (room_id))
+    #         room_data = await cursor.fetchone()
+    # Fetch all rooms from the database
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT * FROM Room"
+            await cursor.execute(sql)
+            rooms_data = await cursor.fetchall()
+
+    nearby_rooms = []
+
+    for room_data in rooms_data:
+        # Calculate the distance between the user and the room using Haversine formula
+        room_latitude = room_data[4]
+        room_longitude = room_data[5]
+        distance = haversine(user_latitude, user_longitude, room_latitude, room_longitude)
+
+        # Define a maximum distance threshold, e.g., 10 kilometers
+        max_distance = room_data[6]  # Adjust this as needed
+
+        if distance <= max_distance:
+            nearby_rooms.append(
+                RoomResponseModel(**{
+                    "RoomID": room_data[0],
+                    "UserID": room_data[1],
+                    "OwnerName": room_data[2],
+                    "RoomPurpose": room_data[3],
+                    "Latitude": room_data[4],
+                    "Longitude": room_data[5],
+                    "DistanceAllowed": room_data[6],
+                    "DistanceFromUser": distance,
+                })
+            )
+
+    return nearby_rooms
+
+def haversine(lat1, lon1, lat2, lon2):
+    R = 6371
+    lat1 = math.radians(lat1)
+    lon1 = math.radians(lon1)
+    lat2 = math.radians(lat2)
+    lon2 = math.radians(lon2)
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+
+    a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    distance = R * c
+
+    return distance
