@@ -313,7 +313,7 @@ async def get_room(room_id: str, token: str = Depends(oauth2_scheme)):
 
 
 
-@app.get("/search_nearby_rooms", tags=['Rooms'], response_model=List[RoomResponseModel])
+@app.get("/search_nearby_rooms", tags=['Rooms'], response_model=List[RoomResponseModel_two])
 async def search_nearby_rooms(user_latitude: float, user_longitude: float, token: str = Depends(oauth2_scheme)):
     info = auth.get_account_info(token)
     email = info['users'][0]['email']
@@ -353,7 +353,7 @@ async def search_nearby_rooms(user_latitude: float, user_longitude: float, token
 
         if distance <= max_distance:
             nearby_rooms.append(
-                RoomResponseModel(**{
+                RoomResponseModel_two(**{
                     "RoomID": room_data[0],
                     "UserID": room_data[1],
                     "OwnerName": room_data[2],

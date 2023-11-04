@@ -37,6 +37,18 @@ class RoomResponseModel(BaseModel):
     DistanceAllowed: float
     PurposeDescriptions: List[PurposeDescription]
 
+
+class RoomResponseModel_two(BaseModel):
+    RoomID: str
+    UserID: int
+    OwnerName: str
+    RoomPurpose: str
+    Latitude: float
+    Longitude: float
+    DistanceAllowed: float
+    DistanceFromUser: float
+    
+
 class UserResponseModel(BaseModel):
     UserID: int
     Name: str
