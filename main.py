@@ -222,6 +222,49 @@ async def create_room(room_data: RoomCreate, token: str = Depends(oauth2_scheme)
 
 
 
+# Endpoint to add a purpose description to a room
+@app.post("/post_add_purpose", response_model=RoomPurposeModel, tags=['Rooms'])
+async def post_add_purpose(purpose_data: RoomPurposeModel, token: str = Depends(oauth2_scheme)):
+    # Get the user's email from the authentication token
+    info = auth.get_account_info(token)
+    email = info['users'][0]['email']
+
+    # Use the email to fetch the User's UserID from the User table
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT UserID FROM User WHERE EmailId = %s"
+            await cursor.execute(sql, (email,))
+            user_info = await cursor.fetchone()
+
+    if not user_info:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Check if the RoomID exists in the Room table
+    if not room_exists(purpose_data.Room_ID):
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    # Add the purpose description data to the RoomPurpose table
+    await insert_purpose_description(purpose_data.Room_ID, purpose_data.Purpose_Description_Heading, purpose_data.Purpose_Description_Value)
+    
+    return purpose_data
+
+# Check if the room exists in the Room table (replace with your database query)
+async def room_exists(room_id):
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT RoomID FROM Room WHERE RoomID = %s"
+            await cursor.execute(sql, (room_id,))
+            return cursor.fetchone() is not None
+
+# Insert purpose description into the RoomPurpose table
+async def insert_purpose_description(room_id, heading, value):
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "INSERT INTO RoomPurpose (Room_ID, Purpose_Description_Heading, Purpose_Description_Value) VALUES (%s, %s, %s)"
+            await cursor.execute(sql, (room_id, heading, value))
+
+
+
 @app.get("/get_room/{room_id}", tags=['Rooms'], response_model=RoomResponseModel)
 async def get_room(room_id: str, token: str = Depends(oauth2_scheme)):
     info = auth.get_account_info(token)
@@ -237,7 +280,7 @@ async def get_room(room_id: str, token: str = Depends(oauth2_scheme)):
     if not user_info:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Fetch the room data based on the provided RoomID
+    # Fetch the room data from the Room table
     async with await get_connection() as conn:
         async with conn.cursor() as cursor:
             sql = "SELECT * FROM Room WHERE RoomID = %s"
@@ -247,6 +290,14 @@ async def get_room(room_id: str, token: str = Depends(oauth2_scheme)):
     if not room_data:
         raise HTTPException(status_code=404, detail="Room not found")
 
+    # Fetch all purpose descriptions for the room from the RoomPurpose table
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT Purpose_Description_Heading, Purpose_Description_Value FROM RoomPurpose WHERE Room_ID = %s"
+            await cursor.execute(sql, (room_id))
+            purpose_descriptions = await cursor.fetchall()
+            print(purpose_descriptions)
+
     return RoomResponseModel(**{
         "RoomID": room_data[0],
         "UserID": room_data[1],
@@ -254,10 +305,9 @@ async def get_room(room_id: str, token: str = Depends(oauth2_scheme)):
         "RoomPurpose": room_data[3],
         "Latitude": room_data[4],
         "Longitude": room_data[5],
-        "DistanceAllowed": room_data[6]
+        "DistanceAllowed": room_data[6],
+        "PurposeDescriptions": [{"Heading": desc[0], "Value": desc[1]} for desc in purpose_descriptions]
     })
-
-
 
 
 

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-
+from typing import List
 class SignupRequest(BaseModel):
     email: str
     password: str
@@ -23,6 +23,10 @@ class RoomCreate(BaseModel):
     Longitude: float
     DistanceAllowed: float
     
+class PurposeDescription(BaseModel):
+    Heading: str
+    Value: str
+
 class RoomResponseModel(BaseModel):
     RoomID: str
     UserID: int
@@ -31,9 +35,16 @@ class RoomResponseModel(BaseModel):
     Latitude: float
     Longitude: float
     DistanceAllowed: float
+    PurposeDescriptions: List[PurposeDescription]
 
 class UserResponseModel(BaseModel):
     UserID: int
     Name: str
     Gender: str
     Age: int
+
+
+class RoomPurposeModel(BaseModel):
+    Room_ID: str
+    Purpose_Description_Heading: str
+    Purpose_Description_Value: str
