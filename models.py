@@ -31,3 +31,9 @@ class RoomResponseModel(BaseModel):
     Latitude: float
     Longitude: float
     DistanceAllowed: float
+
+class UserResponseModel(BaseModel):
+    UserID: int
+    Name: str
+    Gender: str
+    Age: int

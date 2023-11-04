@@ -376,3 +376,49 @@ async def join_room(room_id: str, token: str = Depends(oauth2_scheme)):
             await cursor.execute(sql, (room_id, user_info[0]))
 
     return {"message": "User joined the room successfully"}
+
+
+@app.get("/room_members/{room_id}", tags=['Rooms'], response_model=List[UserResponseModel])
+async def get_room_members(room_id: str, token: str = Depends(oauth2_scheme)):
+    info = auth.get_account_info(token)
+    email = info['users'][0]['email']
+
+    # Use the email to fetch the User's UserID from the User table
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT UserID FROM User WHERE EmailId = %s"
+            await cursor.execute(sql, (email,))
+            user_info = await cursor.fetchone()
+
+    if not user_info:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Check if the user is a member of the room
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT * FROM RoomParticipants WHERE Room_ID = %s AND ParticipantID = %s"
+            await cursor.execute(sql, (room_id, user_info[0]))
+            is_member = await cursor.fetchone()
+
+    if not is_member:
+        raise HTTPException(status_code=403, detail="User is not a member of the room")
+
+    # Fetch all members of the room by joining the RoomParticipants and User tables
+    async with await get_connection() as conn:
+        async with conn.cursor() as cursor:
+            sql = "SELECT u.UserID, u.Name AS Name, u.Gender, u.Age FROM User u INNER JOIN RoomParticipants rm ON u.UserID = rm.ParticipantID WHERE rm.Room_ID = %s"
+            await cursor.execute(sql, (room_id,))
+            room_members = await cursor.fetchall()
+
+    # Convert the SQL result to a list of dictionaries with the expected keys
+    room_members_data = [
+        {
+            "UserID": user[0],
+            "Name": user[1],  # Alias the 'Name' column as 'Name'
+            "Gender": user[2],
+            "Age": user[3],
+        }
+        for user in room_members
+    ]
+
+    return room_members_data
