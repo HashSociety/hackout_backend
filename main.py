@@ -29,6 +29,11 @@ async def index(request: Request):
     
     return {"message": "Hello"}
 
+
+@app.get("/get")
+async def index(request: Request):
+    
+    return {"message": "Hello"}
 # const firebaseConfig = {
 #   apiKey: "AIzaSyBtQKU950eUqsgAVtQw5aubRKXcmyc5g2E",
 #   authDomain: "hashtogether.firebaseapp.com",
