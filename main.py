@@ -194,11 +194,25 @@ async def create_room(room_data: RoomCreate, token: str = Depends(oauth2_scheme)
         """
         values = (room_id, user_info[0], room_data.OwnerName, room_data.RoomPurpose,
                 room_data.Latitude, room_data.Longitude, room_data.DistanceAllowed)
+        
+        query_participant = """
+            INSERT INTO RoomParticipants (Room_ID, ParticipantID, IsAdmin) VALUES (%s, %s, %s)
+        """
+
+        value_participant=(room_id,user_info,1)
+
+
         async with await get_connection() as conn:
             async with conn.cursor() as cursor:
                 print(0)
                 await cursor.execute(query, values)
                 print(1)
+            
+            async with conn.cursor() as cursor:
+                print(0)
+                await cursor.execute(query_participant, value_participant)
+                print(1)
+            
             conn.commit()
     except Exception as e:
         print(e)
