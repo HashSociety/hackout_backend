@@ -145,3 +145,11 @@ config = {
 - pyrebase: A Python wrapper for the Firebase API.
 - aiomysql: An asynchronous MySQL client for Python.
 
+## Screenshots
+| Landing Page                        | Creating Room                       | Join Room                                   |
+| ----------------------------------- | ----------------------------------- | ------------------------------------------- |
+| ![5](images/5.png)                  | ![2](images/2.png)                  | ![3](images/3.png)                    |
+
+| Room and its Details                | Overview                            |
+| ----------------------------------- | ----------------------------------- | 
+| ![4](images/4.png)                  | ![1](images/1.png)                  | 
