@@ -6,7 +6,6 @@ Our project, HeadTogether is a travel companion app tailored for travelers. With
 ![flow](images/flow.png)
 ## Database Diagram
 ![db](images/db.png)
-## Getting Started
 
 ## Tech Stack
 ### Frontend 
@@ -43,6 +42,10 @@ MySQL is a relational database management system. It can be used to store struct
 ### Hosting
 #### Render
 Render is a cloud hosting platform that can host both frontend and backend applications. It offers scalability and ease of deployment, which is important for ensuring your app can handle varying levels of traffic. Used here to host FASTApi app.
+
+
+## Getting Started
+Before running the backend, make sure to install required dependencies.
 
 ```bash
 pip install fastapi[all] aiomysql pyrebase4
