@@ -70,6 +70,17 @@ This command starts the application on `http://localhost:8000`. You can access t
 - Requires providing a valid room ID.
 - The user is added as a participant in the room.
 
+### Messaging inside Rooms
+#### Post Chat (POST `/post_chat`)
+
+- Sends message to the designated room.
+
+#### Get Chat (POST `/get_chats/{room_id}`)
+
+- Gets chats from that particular room. Works in sync with post_chat.
+
+- Sends message to the designated room.
+
 ## Database Configuration
 
 The application uses MySQL for user and room data storage. Make sure to configure the MySQL database connection parameters in the `create_connection_pool` function.
