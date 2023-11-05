@@ -6,9 +6,46 @@ Our project, HeadTogether is a travel companion app tailored for travelers. With
 ![flow](images/flow.png)
 ## Database Diagram
 ![db](images/db.png)
-## Getting Started
 
+## Tech Stack
+### Frontend 
+#### Capacitor (Ionic)
+Capacitor allows you to convert your web app (built with React) into a native app, which is crucial for creating a mobile travel companion application. It bridges the gap between web and native development.
+
+#### React
+React is a popular and efficient JavaScript library for building user interfaces. It provides a responsive and interactive front end for your app.
+
+#### TypeScript
+TypeScript is a statically typed superset of JavaScript that helps catch type-related errors early in development, enhancing code quality and maintainability.
+
+#### ReactQuery
+ReactQuery is a library that simplifies data fetching and state management in React applications. It can improve the performance and maintainability of your app by handling data retrieval and caching.
+
+#### ReactRouter
+ReactRouter is used for managing the routing and navigation within your React application, ensuring a smooth and organized user experience.
+
+#### Android SDK
+This is essential for building Android applications. It provides the tools, libraries, and APIs necessary for developing Android apps.
+
+### Backend 
+#### FASTApi
+FASTApi is a modern, fast (high-performance), web framework for building APIs with Python. It's suitable for creating the server-side logic and API endpoints for your app.
 Before running the application, you need to install the required dependencies. You can do this using `pip`.
+
+### Database
+#### Firebase 
+Firebase offers real-time database and authentication services, making it an excellent choice for a travel companion app that requires features like user authentication, real-time updates, and data storage. Used here for authentication
+
+#### MySQL
+MySQL is a relational database management system. It can be used to store structured data and ensure data consistency and integrity, which may be necessary for certain aspects of your application. Used here for user and room data management.
+
+### Hosting
+#### Render
+Render is a cloud hosting platform that can host both frontend and backend applications. It offers scalability and ease of deployment, which is important for ensuring your app can handle varying levels of traffic. Used here to host FASTApi app.
+
+
+## Getting Started
+Before running the backend, make sure to install required dependencies.
 
 ```bash
 pip install fastapi[all] aiomysql pyrebase4
@@ -70,6 +107,17 @@ This command starts the application on `http://localhost:8000`. You can access t
 - Requires providing a valid room ID.
 - The user is added as a participant in the room.
 
+### Messaging inside Rooms
+#### Post Chat (POST `/post_chat`)
+
+- Sends message to the designated room.
+
+#### Get Chat (POST `/get_chats/{room_id}`)
+
+- Gets chats from that particular room. Works in sync with post_chat.
+
+- Sends message to the designated room.
+
 ## Database Configuration
 
 The application uses MySQL for user and room data storage. Make sure to configure the MySQL database connection parameters in the `create_connection_pool` function.
@@ -97,3 +145,11 @@ config = {
 - pyrebase: A Python wrapper for the Firebase API.
 - aiomysql: An asynchronous MySQL client for Python.
 
+## Screenshots
+| Landing Page                        | Creating Room                       | Join Room                                   |
+| ----------------------------------- | ----------------------------------- | ------------------------------------------- |
+| ![5](images/5.png)                  | ![2](images/2.png)                  | ![3](images/3.png)                    |
+
+| Room and its Details                | Overview                            |
+| ----------------------------------- | ----------------------------------- | 
+| ![4](images/4.png)                  | ![1](images/1.png)                  | 
